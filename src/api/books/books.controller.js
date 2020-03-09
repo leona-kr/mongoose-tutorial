@@ -1,5 +1,8 @@
 const Joi = require('joi');
-const { Types: { ObjectId } } = require('mongoose');
+// const { Types: { ObjectId } } = require('mongoose');
+const mongoose = require('mongoose');
+mongoose.set('useFindAndModify', false);
+const { Types: { ObjectId } } = mongoose;
 
 const Book = require('models/book');
 
@@ -25,7 +28,11 @@ exports.get = async (ctx) => {
     return;
   }
 
-  ctx.body = book;
+  ctx.body = {
+    result: 'Success',
+    message: '',
+    data: book
+  };
 };
 
 exports.list = async (ctx) => {
@@ -44,7 +51,11 @@ exports.list = async (ctx) => {
     return ctx.throw(500, e);
   }
 
-  ctx.body = books;
+  ctx.body = {
+    result: 'Success',
+    message: '',
+    data: books
+  };
 };
 
 exports.create = async (ctx) => {
@@ -81,7 +92,11 @@ exports.create = async (ctx) => {
   }
 
   // 저장한 결과를 반환한다
-  ctx.body = book;
+  ctx.body = {
+    result: 'Success',
+    message: 'new item created!',
+    data: book
+  };
 };
 
 exports.delete = async (ctx) => {
@@ -100,7 +115,11 @@ exports.delete = async (ctx) => {
     }
   }
 
-  ctx.status = 204; // no content
+  // ctx.status = 204; // no content
+  ctx.body = {
+    result: 'Success',
+    message: id + ' was deleted!'
+  };
 };
 
 exports.replace = async (ctx) => {
@@ -148,7 +167,11 @@ exports.replace = async (ctx) => {
     return ctx.throw(500, e);
   }
 
-  ctx.body = book;
+  ctx.body = {
+    resultCode: 'Success',
+    message: id + ' was replaced!',
+    data: book
+  };
 }
 
 exports.update = async (ctx) => {
@@ -165,6 +188,8 @@ exports.update = async (ctx) => {
   try {
     // 아이디로 찾아서 업데이트
     // 파라메터는 (아이디, 변경 할 값, 설정) 순
+    // findAndModify(query, sort, doc, options, callback(error, result))
+    // findAndModify(body, sr)
     book = await Book.findByIdAndUpdate(id, body, {
       // upsert 의 기본값은 false 입니다.
       new: true // 이 값을 넣어줘야 반환하는 값이 업데이트된 데이터, 없으면 ctx.body의 값이 request.body 값
@@ -173,5 +198,10 @@ exports.update = async (ctx) => {
     return ctx.throw(500, e);
   }
 
-  ctx.body = book;
+  // ctx.body = book;
+  ctx.body = {
+    resultCode: 'Success',
+    message : id + ' was updated!',
+    data: book
+  };
 };
