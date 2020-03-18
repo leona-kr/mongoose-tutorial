@@ -5,9 +5,15 @@ mongoose.set('useFindAndModify', false);
 const { Types: { ObjectId } } = mongoose;
 
 const Book = require('models/book');
+const Author = require('models/author');
 
 exports.get = async (ctx) => {
   const { id } = ctx.params;
+
+  if(!ObjectId.isValid(id)) {
+    ctx.status = 400; // Bad Request
+    return;
+  }
 
   let book;
 
@@ -44,8 +50,9 @@ exports.list = async (ctx) => {
     // .exec() 를 뒤에 붙여줘야 실제로 데이터베이스에 요청이 된다
     // 반환값은 Promise 이므로 await를 사용할 수 있다.
     books = await Book.find()
-          .sort({_id: -1})  // _id 역순으로 정렬
-          .limit(3) // 3개만 보여지도록 정렬
+          // .sort({_id: -1})  // _id 역순으로 정렬
+          .sort({'createdAt': -1})
+          .limit()
           .exec();  // 데이터를 서버에 요청
   } catch (e) {
     return ctx.throw(500, e);
@@ -59,8 +66,6 @@ exports.list = async (ctx) => {
 };
 
 exports.create = async (ctx) => {
-  const { body } = ctx.request;
-
   const { 
     title,
     authors,
@@ -69,10 +74,23 @@ exports.create = async (ctx) => {
     tags
   } = ctx.request.body;
 
+  const author = [];
+  try {
+    for(let i=0;i<authors.length;i++){
+      author.push(await new Author({
+        name: authors[i].name,
+        email: authors[i].email
+      }).save());
+    }
+    // await author.save();
+  } catch(e){
+    return ctx.throw(500, e);
+  }
+
   // Book 인스턴스를 생성
   const book = new Book({
     title,
-    authors,
+    authors: author,
     publishedDate,
     price,
     tags
@@ -113,6 +131,7 @@ exports.delete = async (ctx) => {
       ctx.status = 400;
       return;
     }
+    return ctx.throw(500, e);
   }
 
   // ctx.status = 204; // no content
